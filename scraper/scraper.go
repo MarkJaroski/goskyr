@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/antchfx/jsonquery"
 	"github.com/goodsign/monday"
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/jakopako/goskyr/date"
@@ -625,6 +626,17 @@ func getTextString(t *ElementLocation, s *goquery.Selection) (string, error) {
 			fieldStrings = append(fieldStrings, fieldSelection.AttrOr(t.Attr, ""))
 		}
 	}
+<<<<<<< HEAD
+=======
+	// do json lookup if we have a json_selector
+	for i, f := range fieldStrings {
+		fieldString, err := extractJsonField(t.JsonSelector, f)
+		if err != nil {
+			return "", err
+		}
+		fieldStrings[i] = fieldString
+	}
+>>>>>>> 4b5e9a9 (Added suggestions (mostly) from jakapako)
 	// automatically trimming whitespaces might be confusing in some cases...
 	for i, f := range fieldStrings {
 		fieldStrings[i] = strings.TrimSpace(f)
@@ -688,12 +700,25 @@ func transformString(t *TransformConfig, s string) (string, error) {
 	return extractedString, nil
 }
 
-func getBaseURL(pageUrl string, doc *goquery.Document) string {
-	// relevant info: https://www.w3.org/TR/WD-html40-970917/htmlweb.html#relative-urls
-	// currently this function does not fully implement the standard
-	baseURL := doc.Find("base").AttrOr("href", "")
-	if baseURL == "" {
-		baseURL = pageUrl
+func extractJsonField(p string, s string) (string, error) {
+	extractedString := s
+	// I have a preference for gate-keepers over the arrow pattern,
+	// but I will go with your preference if you want
+	if p == "" {
+		return extractedString, nil
 	}
-	return baseURL
+	// HACK: json has some instances of meaningfull whitespace
+	// (\n in values). Let's get rid of them
+	spacecleaner, err := regexp.Compile(`\s+`)
+	s = spacecleaner.ReplaceAllString(s, " ")
+	// HACK: a dangling comma is another common json mistake
+	regex, err := regexp.Compile(`,\s*}`)
+	s = regex.ReplaceAllString(s, " }")
+	doc, err := jsonquery.Parse(strings.NewReader(s))
+	if err != nil {
+		return "", fmt.Errorf("JSON: %+v : %s", err, s)
+	}
+	node := jsonquery.FindOne(doc, p)
+	extractedString = fmt.Sprintf("%v", node.Value())
+	return extractedString, nil
 }
