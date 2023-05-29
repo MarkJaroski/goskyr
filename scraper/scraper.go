@@ -55,6 +55,7 @@ type RegexConfig struct {
 // ElementLocation is used to find a specific string in a html document
 type ElementLocation struct {
 	Selector      string      `yaml:"selector,omitempty"`
+	JsonSelector  string      `yaml:"json_selector,omitempty"`
 	NodeIndex     int         `yaml:"node_index,omitempty"`
 	ChildIndex    int         `yaml:"child_index,omitempty"`
 	RegexExtract  RegexConfig `yaml:"regex_extract,omitempty"`
@@ -696,8 +697,6 @@ func getTextString(t *ElementLocation, s *goquery.Selection) (string, error) {
 			fieldStrings = append(fieldStrings, fieldSelection.AttrOr(t.Attr, ""))
 		}
 	}
-<<<<<<< HEAD
-=======
 	// do json lookup if we have a json_selector
 	for i, f := range fieldStrings {
 		fieldString, err := extractJsonField(t.JsonSelector, f)
@@ -706,7 +705,6 @@ func getTextString(t *ElementLocation, s *goquery.Selection) (string, error) {
 		}
 		fieldStrings[i] = fieldString
 	}
->>>>>>> 4b5e9a9 (Added suggestions (mostly) from jakapako)
 	// automatically trimming whitespaces might be confusing in some cases...
 	for i, f := range fieldStrings {
 		fieldStrings[i] = strings.TrimSpace(f)
