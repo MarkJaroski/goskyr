@@ -768,6 +768,16 @@ func transformString(t *TransformConfig, s string) (string, error) {
 	return extractedString, nil
 }
 
+func getBaseURL(pageUrl string, doc *goquery.Document) string {
+	// relevant info: https://www.w3.org/TR/WD-html40-970917/htmlweb.html#relative-urls
+	// currently this function does not fully implement the standard
+	baseURL := doc.Find("base").AttrOr("href", "")
+	if baseURL == "" {
+		baseURL = pageUrl
+	}
+	return baseURL
+}
+
 func extractJsonField(p string, s string) (string, error) {
 	extractedString := s
 	// I have a preference for gate-keepers over the arrow pattern,
